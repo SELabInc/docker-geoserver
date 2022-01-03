@@ -9,10 +9,10 @@ ARG WAR_URL=https://downloads.sourceforge.net/project/geoserver/GeoServer/${GS_V
 ARG STABLE_PLUGIN_BASE_URL=https://liquidtelecom.dl.sourceforge.net
 ARG DOWNLOAD_ALL_STABLE_EXTENSIONS=1
 ARG DOWNLOAD_ALL_COMMUNITY_EXTENSIONS=1
-ARG GEOSERVER_UID=1000
-ARG GEOSERVER_GID=10001
-ARG USER=selabdev
-ARG GROUP_NAME=selabdev
+ARG GEOSERVER_UID=0
+ARG GEOSERVER_GID=0
+ARG USER=root
+ARG GROUP_NAME=root
 ARG HTTPS_PORT=8443
 
 #Install extra fonts to use with sld font markers
@@ -49,8 +49,10 @@ ENV \
 
 
 WORKDIR /scripts
-RUN groupadd -r ${GROUP_NAME} -g ${GEOSERVER_GID} && \
-    useradd -m -d /home/${USER}/ -u ${GEOSERVER_UID} --gid ${GEOSERVER_GID} -s /bin/bash -G ${GROUP_NAME} ${USER}
+
+#RUN groupadd -r ${GROUP_NAME} -g ${GEOSERVER_GID} && \
+#    useradd -m -d /home/${USER}/ -u ${GEOSERVER_UID} --gid ${GEOSERVER_GID} -s /bin/bash -G ${GROUP_NAME} ${USER} \
+
 RUN mkdir -p  ${GEOSERVER_DATA_DIR} ${CERT_DIR} ${FOOTPRINTS_DATA_DIR} ${FONTS_DIR} \
              ${GEOWEBCACHE_CACHE_DIR} ${GEOSERVER_HOME} ${EXTRA_CONFIG_DIR} /community_plugins /stable_plugins \
            /plugins /geo_data
@@ -62,12 +64,12 @@ RUN cp /build_data/stable_plugins.txt /plugins && cp /build_data/community_plugi
 
 ADD scripts /scripts
 RUN echo $GS_VERSION > /scripts/geoserver_version.txt
-
 RUN chmod +x /scripts/*.sh;/scripts/setup.sh \
     && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*;chown -R ${USER}:${GROUP_NAME} \
     ${CATALINA_HOME} ${FOOTPRINTS_DATA_DIR} ${GEOSERVER_DATA_DIR} /scripts ${CERT_DIR} ${FONTS_DIR} \
     /tmp/ /home/${USER}/ /community_plugins/ /plugins ${GEOSERVER_HOME} ${EXTRA_CONFIG_DIR} \
-    /usr/share/fonts/ /geo_data;chmod o+rw ${CERT_DIR} ;chown -R ${USER}:${GROUP_NAME} /opt/geoserver
+    /usr/share/fonts/ /geo_data;chmod o+rw ${CERT_DIR}
+
 
 EXPOSE  $HTTPS_PORT
 

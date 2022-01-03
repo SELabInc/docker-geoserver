@@ -3,7 +3,7 @@ ARG IMAGE_VERSION=9.0-jdk11-openjdk-slim-buster
 ARG JAVA_HOME=/usr/local/openjdk-11
 FROM tomcat:$IMAGE_VERSION
 
-LABEL maintainer="Tim Sutton<tim@linfiniti.com>"
+LABEL maintainer="sjpark<sejunpark.selab@lgmail.com>"
 ARG GS_VERSION=2.20.1
 ARG WAR_URL=https://downloads.sourceforge.net/project/geoserver/GeoServer/${GS_VERSION}/geoserver-${GS_VERSION}-war.zip
 ARG STABLE_PLUGIN_BASE_URL=https://liquidtelecom.dl.sourceforge.net
@@ -11,14 +11,19 @@ ARG DOWNLOAD_ALL_STABLE_EXTENSIONS=1
 ARG DOWNLOAD_ALL_COMMUNITY_EXTENSIONS=1
 ARG GEOSERVER_UID=1000
 ARG GEOSERVER_GID=10001
-ARG USER=geoserveruser
-ARG GROUP_NAME=geoserverusers
+ARG USER=selabdev
+ARG GROUP_NAME=selabdev
 ARG HTTPS_PORT=8443
 
 #Install extra fonts to use with sld font markers
-RUN apt-get -y update; apt-get -y --no-install-recommends install fonts-cantarell lmodern ttf-aenigma \
-    ttf-georgewilliams ttf-bitstream-vera ttf-sjfonts tv-fonts  libapr1-dev libssl-dev  \
-    gdal-bin libgdal-java wget zip unzip curl xsltproc certbot  cabextract gettext postgresql-client figlet
+RUN apt-get -y update;
+RUN apt-get -y --no-install-recommends install fonts-cantarell fonts-nanum* fonts-roboto fonts-thai-tlwg-ttf lmodern ttf-aenigma \
+    ttf-georgewilliams ttf-bitstream-vera ttf-sjfonts tv-fonts  libapr1-dev libssl-dev \
+    gdal-bin libgdal-java wget zip unzip curl xsltproc certbot  cabextract gettext postgresql-client figlet;
+
+#RUN apt-get update
+#RUN apt-get install -y fonts-nanum*
+#RUN fc-cache -fv
 
 RUN set -e \
     export DEBIAN_FRONTEND=noninteractive \
@@ -39,7 +44,8 @@ ENV \
     RANDFILE=/etc/certs/.rnd \
     FONTS_DIR=/opt/fonts \
     GEOSERVER_HOME=/geoserver \
-    EXTRA_CONFIG_DIR=/settings
+    EXTRA_CONFIG_DIR=/settings \
+    EXISTING_DATA_DIR=true
 
 
 WORKDIR /scripts
@@ -56,12 +62,12 @@ RUN cp /build_data/stable_plugins.txt /plugins && cp /build_data/community_plugi
 
 ADD scripts /scripts
 RUN echo $GS_VERSION > /scripts/geoserver_version.txt
+
 RUN chmod +x /scripts/*.sh;/scripts/setup.sh \
     && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*;chown -R ${USER}:${GROUP_NAME} \
     ${CATALINA_HOME} ${FOOTPRINTS_DATA_DIR} ${GEOSERVER_DATA_DIR} /scripts ${CERT_DIR} ${FONTS_DIR} \
     /tmp/ /home/${USER}/ /community_plugins/ /plugins ${GEOSERVER_HOME} ${EXTRA_CONFIG_DIR} \
-    /usr/share/fonts/ /geo_data;chmod o+rw ${CERT_DIR}
-
+    /usr/share/fonts/ /geo_data;chmod o+rw ${CERT_DIR} ;chown -R ${USER}:${GROUP_NAME} /opt/geoserver
 
 EXPOSE  $HTTPS_PORT
 
